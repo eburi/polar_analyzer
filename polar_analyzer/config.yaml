@@ -17,10 +17,8 @@ ports_description:
 map:
   - "addon_config:rw"
 options:
-  signalk_url: "ws://primrose.local:3000/signalk/v1/stream?subscribe=none"
-  signalk_http_url: "http://primrose.local:3000"
+  signalk_url: "http://homeassistant.local:3000"
   log_level: "info"
 schema:
   signalk_url: "url"
-  signalk_http_url: "url"
   log_level: "list(debug|info|warning|error)"

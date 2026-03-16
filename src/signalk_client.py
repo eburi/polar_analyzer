@@ -101,9 +101,9 @@ class SignalKClient:
         if self._session is None or self._session.closed:
             self._session = aiohttp.ClientSession()
 
-        logger.info("Connecting to %s", self._config.signalk_url)
+        logger.info("Connecting to %s", self._config.signalk_ws_url)
         self._ws = await self._session.ws_connect(
-            self._config.signalk_url,
+            self._config.signalk_ws_url,
             headers=headers,
             heartbeat=30,
         )

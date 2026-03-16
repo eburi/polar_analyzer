@@ -25,9 +25,20 @@ class Config:
     app_version: str = "0.1.0"
 
     # --- SignalK connection ---
-    signalk_url: str = "ws://primrose.local:3000/signalk/v1/stream?subscribe=none"
-    signalk_http_url: str = "http://primrose.local:3000"
+    signalk_url: str = "http://primrose.local:3000"
     reconnect_delays: list[float] = field(default_factory=lambda: [1, 2, 5, 10, 30])
+
+    @property
+    def signalk_ws_url(self) -> str:
+        """Derive WebSocket streaming URL from the base SignalK URL."""
+        base = self.signalk_url.rstrip("/")
+        ws_base = base.replace("https://", "wss://").replace("http://", "ws://")
+        return f"{ws_base}/signalk/v1/stream?subscribe=none"
+
+    @property
+    def signalk_http_url(self) -> str:
+        """HTTP base URL (the signalk_url itself, normalised)."""
+        return self.signalk_url.rstrip("/")
 
     # --- Auth ---
     device_name: str = "Polar Analyzer"
@@ -100,7 +111,6 @@ class Config:
         cfg = cls()
         env_map: dict[str, tuple[str, type]] = {
             "POLAR_ANALYZER_SIGNALK_URL": ("signalk_url", str),
-            "POLAR_ANALYZER_SIGNALK_HTTP_URL": ("signalk_http_url", str),
             "POLAR_ANALYZER_TOKEN_FILE": ("token_file", str),
             "POLAR_ANALYZER_DATA_DIR": ("data_dir", str),
             "POLAR_ANALYZER_WEB_PORT": ("web_port", int),

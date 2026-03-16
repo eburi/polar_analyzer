@@ -26,7 +26,7 @@ pip install -r requirements.txt
 python src/main.py live
 
 # Or specify a custom SignalK server
-python src/main.py live --url ws://192.168.1.100:3000/signalk/v1/stream?subscribe=none
+python src/main.py live --url http://192.168.1.100:3000
 
 # Inspect available SignalK paths
 python src/main.py inspect
@@ -55,8 +55,7 @@ Modes:
   replay    Feed recorded JSONL through the pipeline
 
 Options:
-  --url URL          SignalK WebSocket URL
-  --http-url URL     SignalK HTTP URL
+  --url URL          SignalK server URL (e.g. http://host:3000)
   --port PORT        Web server port (default: 3001)
   --data-dir DIR     Data directory (default: ~/.polar_analyzer)
   --replay-file FILE JSONL file to replay (required for replay mode)
@@ -69,8 +68,7 @@ Configuration is layered: defaults, then `POLAR_ANALYZER_*` environment variable
 
 | Environment Variable | Description | Default |
 |---|---|---|
-| `POLAR_ANALYZER_SIGNALK_URL` | WebSocket URL | `ws://primrose.local:3000/signalk/v1/stream?subscribe=none` |
-| `POLAR_ANALYZER_SIGNALK_HTTP_URL` | HTTP URL | `http://primrose.local:3000` |
+| `POLAR_ANALYZER_SIGNALK_URL` | SignalK server URL | `http://primrose.local:3000` |
 | `POLAR_ANALYZER_TOKEN_FILE` | Auth token path | `~/.polar_analyzer/signalk_token.json` |
 | `POLAR_ANALYZER_DATA_DIR` | Data directory | `~/.polar_analyzer` |
 | `POLAR_ANALYZER_WEB_PORT` | Web dashboard port | `3001` |

@@ -33,7 +33,8 @@ Polar Analyzer is a SignalK-connected application that learns boat polars from l
 ## SignalK Connection
 
 - **Server:** primrose.local / 192.168.46.222 port 3000
-- **WebSocket:** `ws://host:3000/signalk/v1/stream?subscribe=none` then explicit subscription
+- **Config:** Single `signalk_url` (e.g. `http://host:3000`); WebSocket and HTTP URLs are derived automatically
+- **WebSocket:** Derived as `ws://host:3000/signalk/v1/stream?subscribe=none`, then explicit subscription
 - **Auth:** Device access request protocol (separate from sea_state_analyzer, device name "Polar Analyzer")
 - **Token storage:** `~/.polar_analyzer/signalk_token.json` (standalone) or `/data/signalk_token.json` (HA)
 - **Publishing:** Delta messages to `vessels.self` context with source label `polar-analyzer`

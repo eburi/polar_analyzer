@@ -434,7 +434,7 @@ async def inspect_mode(config: Config) -> None:
     logger.info("Inspecting SignalK at %s", config.signalk_url)
 
     # Use subscribe=all to discover paths
-    inspect_url = config.signalk_url.replace("subscribe=none", "subscribe=all")
+    inspect_url = config.signalk_ws_url.replace("subscribe=none", "subscribe=all")
 
     paths_seen: dict[str, str] = {}
 
@@ -590,11 +590,7 @@ def main() -> None:
     )
     parser.add_argument(
         "--url",
-        help="SignalK WebSocket URL",
-    )
-    parser.add_argument(
-        "--http-url",
-        help="SignalK HTTP URL",
+        help="SignalK server URL (e.g. http://host:3000)",
     )
     parser.add_argument(
         "--port",
@@ -630,20 +626,10 @@ def main() -> None:
     config = Config.from_env()
     if args.url:
         config.signalk_url = args.url
-    if args.http_url:
-        config.signalk_http_url = args.http_url
     if args.port:
         config.web_port = args.port
     if args.data_dir:
         config.data_dir = args.data_dir
-
-    # Derive HTTP URL from WS URL if not explicitly set
-    if args.url and not args.http_url:
-        ws_url = args.url
-        http_url = (
-            ws_url.split("/signalk")[0].replace("ws://", "http://").replace("wss://", "https://")
-        )
-        config.signalk_http_url = http_url
 
     # Run
     if args.mode == "live":
