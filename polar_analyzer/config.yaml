@@ -3,10 +3,11 @@ description: "Learns boat polars from live SignalK sailing data and publishes re
 version: "0.1.0"
 slug: "polar_analyzer"
 url: "https://github.com/eburi/polar_analyzer"
+image: ghcr.io/eburi/polar_analyzer/{arch}
+init: false
 arch:
   - aarch64
   - amd64
-  - armv7
 startup: "application"
 boot: "auto"
 ports:

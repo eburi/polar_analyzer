@@ -26,8 +26,10 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Copy src into add-on directory
-        run: cp -r src polar_analyzer/src
+      - name: Copy src and web into add-on directory
+        run: |
+          cp -r src polar_analyzer/src
+          cp -r web polar_analyzer/web
 
       - name: Build and push
         uses: home-assistant/builder@2026.02.1
