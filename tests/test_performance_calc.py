@@ -12,7 +12,6 @@ from models import InstantSample, PerformanceMetrics, SeaState, ValidSample
 from performance_calc import PerformanceCalc
 from polar_engine import PolarEngine
 
-
 KT_TO_MS = 1 / 1.94384
 DEG_TO_RAD = math.pi / 180.0
 MS_TO_KT = 1.94384
@@ -80,9 +79,7 @@ class TestPerformanceCalcBasics:
         result = perf.compute(sample)
         assert result is None
 
-    def test_returns_metrics_with_polar_data(
-        self, perf: PerformanceCalc, engine: PolarEngine
-    ):
+    def test_returns_metrics_with_polar_data(self, perf: PerformanceCalc, engine: PolarEngine):
         fill_realistic_polar(engine)
 
         sample = InstantSample(
@@ -95,9 +92,7 @@ class TestPerformanceCalcBasics:
         assert metrics is not None
         assert isinstance(metrics, PerformanceMetrics)
 
-    def test_returns_metrics_without_polar(
-        self, perf: PerformanceCalc
-    ):
+    def test_returns_metrics_without_polar(self, perf: PerformanceCalc):
         """Should still compute VMG even without polar data."""
         sample = InstantSample(
             timestamp=1000.0,
@@ -288,9 +283,7 @@ class TestOptimalAngles:
         # When downwind, target should be gybe angle
         assert metrics.target_angle == metrics.gybe_angle
 
-    def test_cache_refreshes_on_version_change(
-        self, perf: PerformanceCalc, engine: PolarEngine
-    ):
+    def test_cache_refreshes_on_version_change(self, perf: PerformanceCalc, engine: PolarEngine):
         fill_realistic_polar(engine)
 
         sample = InstantSample(

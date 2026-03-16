@@ -8,7 +8,7 @@ import time
 from dataclasses import asdict
 from pathlib import Path
 
-from config import Config
+from config import VERSION, Config
 from models import InstantSample
 
 logger = logging.getLogger(__name__)
@@ -48,9 +48,10 @@ class Recorder:
         try:
             if self._file_handle is None:
                 assert self._current_file is not None
-                self._file_handle = open(self._current_file, "a")
+                self._file_handle = open(self._current_file, "a")  # noqa: SIM115
 
             for record in self._batch:
+                record["version"] = VERSION
                 self._file_handle.write(json.dumps(record, default=str) + "\n")
             self._file_handle.flush()
             self._samples_written += len(self._batch)
@@ -67,8 +68,8 @@ class Recorder:
 
     def _close_file(self) -> None:
         if self._file_handle is not None:
-            try:
+            import contextlib
+
+            with contextlib.suppress(OSError):
                 self._file_handle.close()
-            except OSError:
-                pass
             self._file_handle = None

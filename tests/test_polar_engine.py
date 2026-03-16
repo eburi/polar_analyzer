@@ -8,7 +8,7 @@ import numpy as np
 import pytest
 
 from config import Config
-from models import PolarCell, PolarTable, SeaState, ValidSample
+from models import PolarTable, SeaState, ValidSample
 from polar_engine import PolarEngine
 
 
@@ -230,13 +230,15 @@ class TestBilinearInterpolation:
         self._fill_grid(engine)
         # Way beyond filled bins — grid has data at 8/10/12 but TWS 50
         # clamps to 30 which has no data
-        bsp = engine.interpolate_bsp(50, 90)
+        engine.interpolate_bsp(50, 90)
         # May be None if no data at clamped bin, or a value from nearest
         # Either is acceptable — test just verifies no crash
 
 
 class TestSessionMerge:
-    def _fill_session(self, engine: PolarEngine, tws_kt: float = 10, twa_deg: float = 90, n: int = 25):
+    def _fill_session(
+        self, engine: PolarEngine, tws_kt: float = 10, twa_deg: float = 90, n: int = 25
+    ):
         tws_ms = tws_kt * KT_TO_MS
         twa_rad = twa_deg * DEG_TO_RAD
         rng = np.random.RandomState(42)

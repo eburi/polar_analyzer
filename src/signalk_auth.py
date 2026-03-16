@@ -13,7 +13,6 @@ import asyncio
 import json
 import logging
 import uuid
-from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
@@ -65,9 +64,11 @@ class SignalKAuth:
         url = f"{self._config.signalk_http_url}/signalk/v1/api/vessels/self"
         headers = {"Authorization": f"Bearer {self._token}"}
         try:
-            async with aiohttp.ClientSession() as session:
-                async with session.get(url, headers=headers, timeout=aiohttp.ClientTimeout(total=10)) as resp:
-                    return resp.status == 200
+            async with (
+                aiohttp.ClientSession() as session,
+                session.get(url, headers=headers, timeout=aiohttp.ClientTimeout(total=10)) as resp,
+            ):
+                return resp.status == 200
         except Exception as exc:
             logger.debug("Token validation failed: %s", exc)
             return False
@@ -94,9 +95,7 @@ class SignalKAuth:
             ) as resp:
                 if resp.status not in (200, 202):
                     body = await resp.text()
-                    raise RuntimeError(
-                        f"Access request failed ({resp.status}): {body}"
-                    )
+                    raise RuntimeError(f"Access request failed ({resp.status}): {body}")
                 result = await resp.json()
 
             # Get the polling href
@@ -132,9 +131,7 @@ class SignalKAuth:
                         logger.info("Device access approved — token saved")
                         return self._token
                     else:
-                        raise RuntimeError(
-                            f"Access request denied: {permission}"
-                        )
+                        raise RuntimeError(f"Access request denied: {permission}")
                 elif state == "PENDING":
                     logger.debug("Still pending approval...")
                 else:

@@ -8,7 +8,6 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any
 
-
 # --- Unit conversions (internal SI ↔ display) ---
 
 MS_TO_KT = 1.94384
@@ -19,16 +18,19 @@ DEG_TO_RAD = math.pi / 180.0
 
 # --- Enums ---
 
+
 class SeaState(Enum):
     """Sea state classification by significant wave height."""
-    FLAT = "flat"          # Hs < 0.5 m
+
+    FLAT = "flat"  # Hs < 0.5 m
     MODERATE = "moderate"  # 0.5 ≤ Hs < 1.5 m
-    ROUGH = "rough"        # Hs ≥ 1.5 m
-    UNKNOWN = "unknown"    # No wave data available
+    ROUGH = "rough"  # Hs ≥ 1.5 m
+    UNKNOWN = "unknown"  # No wave data available
 
 
 class PropulsionMode(Enum):
     """Current propulsion detection result."""
+
     SAILING = "sailing"
     MOTORING = "motoring"
     UNKNOWN = "unknown"
@@ -36,13 +38,15 @@ class PropulsionMode(Enum):
 
 class PropulsionOverride(Enum):
     """Manual override from web UI."""
-    AUTO = "auto"          # Use auto-detection (layers 1+2)
-    SAILING = "sailing"    # Force sailing (e.g. engine on for battery charging)
+
+    AUTO = "auto"  # Use auto-detection (layers 1+2)
+    SAILING = "sailing"  # Force sailing (e.g. engine on for battery charging)
     MOTORING = "motoring"  # Force motoring
 
 
 class FilterRejectReason(Enum):
     """Why a sample was rejected by the steady-state filter."""
+
     MOTORING = "motoring"
     TWS_TOO_LOW = "tws_too_low"
     BSP_TOO_LOW = "bsp_too_low"
@@ -57,9 +61,11 @@ class FilterRejectReason(Enum):
 
 # --- SignalK raw update ---
 
+
 @dataclass
 class SignalKUpdate:
     """A single path/value update from a SignalK delta."""
+
     path: str
     value: Any
     timestamp: str  # ISO 8601
@@ -68,48 +74,50 @@ class SignalKUpdate:
 
 # --- Instant sample (snapshot of all relevant state) ---
 
+
 @dataclass
 class InstantSample:
     """1Hz snapshot from the state store — all values in SI."""
+
     timestamp: float  # Unix epoch
 
     # Wind
-    tws: float | None = None       # m/s
-    twa: float | None = None       # rad (signed, negative=port)
-    aws: float | None = None       # m/s
-    awa: float | None = None       # rad (signed)
+    tws: float | None = None  # m/s
+    twa: float | None = None  # rad (signed, negative=port)
+    aws: float | None = None  # m/s
+    awa: float | None = None  # rad (signed)
 
     # Speed
-    bsp: float | None = None       # m/s (speed through water)
-    sog: float | None = None       # m/s (speed over ground)
+    bsp: float | None = None  # m/s (speed through water)
+    sog: float | None = None  # m/s (speed over ground)
 
     # Course / heading
-    cog: float | None = None       # rad
-    heading: float | None = None   # rad
-    rot: float | None = None       # rad/s (rate of turn)
+    cog: float | None = None  # rad
+    heading: float | None = None  # rad
+    rot: float | None = None  # rad/s (rate of turn)
 
     # Attitude
-    pitch: float | None = None     # rad
-    roll: float | None = None      # rad
+    pitch: float | None = None  # rad
+    roll: float | None = None  # rad
 
     # Position
     latitude: float | None = None  # degrees
-    longitude: float | None = None # degrees
+    longitude: float | None = None  # degrees
 
     # Steering
     rudder_angle: float | None = None  # rad
 
     # Environment
     current_drift: float | None = None  # m/s
-    current_set: float | None = None    # rad
-    wave_height: float | None = None    # m (significant height)
-    wave_period: float | None = None    # s
+    current_set: float | None = None  # rad
+    wave_height: float | None = None  # m (significant height)
+    wave_period: float | None = None  # s
     motion_severity: float | None = None  # 0-1 ratio
-    depth: float | None = None          # m
+    depth: float | None = None  # m
 
     # Propulsion (optional)
-    engine_rpm: float | None = None     # revolutions/s (from SignalK)
-    engine_state: str | None = None     # "stopped", "started", etc.
+    engine_rpm: float | None = None  # revolutions/s (from SignalK)
+    engine_state: str | None = None  # "stopped", "started", etc.
 
     @property
     def twa_deg(self) -> float | None:
@@ -133,13 +141,15 @@ class InstantSample:
 
 # --- Valid (filtered) sample ready for polar binning ---
 
+
 @dataclass
 class ValidSample:
     """A sample that passed all filters — ready for polar binning."""
+
     timestamp: float
-    tws: float       # m/s
-    twa_abs: float   # rad (absolute — symmetric)
-    bsp: float       # m/s
+    tws: float  # m/s
+    twa_abs: float  # rad (absolute — symmetric)
+    bsp: float  # m/s
     sea_state: SeaState = SeaState.UNKNOWN
 
     # Optional context
@@ -164,14 +174,16 @@ class ValidSample:
 
 # --- Polar table structures ---
 
+
 @dataclass
 class PolarCell:
     """One cell in the polar grid: a (TWS, TWA) bin."""
+
     tws_center_kt: float
     twa_center_deg: float
     samples: list[float] = field(default_factory=list)  # BSP values in m/s
     bsp_percentile: float | None = None  # Computed polar BSP (m/s)
-    bsp_smoothed: float | None = None    # After spline smoothing (m/s)
+    bsp_smoothed: float | None = None  # After spline smoothing (m/s)
     sample_count: int = 0
 
     def add_sample(self, bsp_ms: float) -> None:
@@ -187,9 +199,10 @@ class PolarCell:
 
 @dataclass
 class PolarTable:
-    """Full polar grid: TWS × TWA → BSP."""
-    tws_bins_kt: list[float]   # bin centers
-    twa_bins_deg: list[float]   # bin centers
+    """Full polar grid: TWS x TWA -> BSP."""
+
+    tws_bins_kt: list[float]  # bin centers
+    twa_bins_deg: list[float]  # bin centers
     cells: dict[tuple[float, float], PolarCell] = field(default_factory=dict)
     sea_state: SeaState = SeaState.UNKNOWN
     created_at: float = field(default_factory=time.time)
@@ -222,36 +235,40 @@ class PolarTable:
 
 # --- Performance metrics ---
 
+
 @dataclass
 class PerformanceMetrics:
     """Real-time performance calculations published to SignalK."""
+
     timestamp: float
 
     # Core metrics
-    polar_speed: float | None = None          # m/s — target BSP from polar
-    polar_speed_ratio: float | None = None    # ratio — actual / target
-    vmg: float | None = None                  # m/s — VMG to wind
+    polar_speed: float | None = None  # m/s — target BSP from polar
+    polar_speed_ratio: float | None = None  # ratio — actual / target
+    vmg: float | None = None  # m/s — VMG to wind
 
     # Optimal upwind
-    beat_angle: float | None = None           # rad
-    beat_angle_vmg: float | None = None       # m/s
+    beat_angle: float | None = None  # rad
+    beat_angle_vmg: float | None = None  # m/s
     beat_angle_target_speed: float | None = None  # m/s
 
     # Optimal downwind
-    gybe_angle: float | None = None           # rad
-    gybe_angle_vmg: float | None = None       # m/s
+    gybe_angle: float | None = None  # rad
+    gybe_angle_vmg: float | None = None  # m/s
     gybe_angle_target_speed: float | None = None  # m/s
 
     # Current applicable target
-    target_angle: float | None = None         # rad
-    target_speed: float | None = None         # m/s
+    target_angle: float | None = None  # rad
+    target_speed: float | None = None  # m/s
 
 
 # --- Trip ---
 
+
 @dataclass
 class Trip:
     """A sailing trip/voyage/race with its own polar data."""
+
     trip_id: str
     name: str
     started_at: float  # Unix epoch
@@ -264,9 +281,11 @@ class Trip:
 
 # --- Filter result ---
 
+
 @dataclass
 class FilterResult:
     """Result of applying all filters to an InstantSample."""
+
     passed: bool
     propulsion_mode: PropulsionMode = PropulsionMode.UNKNOWN
     reject_reasons: list[FilterRejectReason] = field(default_factory=list)

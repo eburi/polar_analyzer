@@ -9,17 +9,25 @@ import os
 from dataclasses import dataclass, field
 from pathlib import Path
 
+# --- Versioning ---
+# Data format version — included in every output row so training pipelines
+# can partition or filter data by the version that produced it.
+# Bump when: fields added/removed/renamed in InstantSample, ValidSample,
+# PolarCell, PolarTable, PerformanceMetrics; or when feature semantics change.
+VERSION = "0.1.0"
+
 
 @dataclass
 class Config:
     """Application configuration with sensible defaults."""
 
+    # --- App version (matches polar_analyzer/config.yaml) ---
+    app_version: str = "0.1.0"
+
     # --- SignalK connection ---
     signalk_url: str = "ws://primrose.local:3000/signalk/v1/stream?subscribe=none"
     signalk_http_url: str = "http://primrose.local:3000"
-    reconnect_delays: list[float] = field(
-        default_factory=lambda: [1, 2, 5, 10, 30]
-    )
+    reconnect_delays: list[float] = field(default_factory=lambda: [1, 2, 5, 10, 30])
 
     # --- Auth ---
     device_name: str = "Polar Analyzer"

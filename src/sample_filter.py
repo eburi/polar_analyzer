@@ -12,20 +12,18 @@ from __future__ import annotations
 import collections
 import logging
 import math
-import time
 
 import numpy as np
 
 from config import Config
 from models import (
     DEG_TO_RAD,
+    RAD_TO_DEG,
     FilterRejectReason,
     FilterResult,
     InstantSample,
-    MS_TO_KT,
     PropulsionMode,
     PropulsionOverride,
-    RAD_TO_DEG,
     SeaState,
     ValidSample,
 )
@@ -42,11 +40,21 @@ class SampleFilter:
 
         # Rolling window buffers (deques of (timestamp, value))
         window = int(config.filter_window_s)
-        self._tws_history: collections.deque[tuple[float, float]] = collections.deque(maxlen=window * 2)
-        self._twd_history: collections.deque[tuple[float, float]] = collections.deque(maxlen=window * 2)
-        self._bsp_history: collections.deque[tuple[float, float]] = collections.deque(maxlen=window * 2)
-        self._heading_history: collections.deque[tuple[float, float]] = collections.deque(maxlen=window * 2)
-        self._sog_history: collections.deque[tuple[float, float]] = collections.deque(maxlen=window * 2)
+        self._tws_history: collections.deque[tuple[float, float]] = collections.deque(
+            maxlen=window * 2
+        )
+        self._twd_history: collections.deque[tuple[float, float]] = collections.deque(
+            maxlen=window * 2
+        )
+        self._bsp_history: collections.deque[tuple[float, float]] = collections.deque(
+            maxlen=window * 2
+        )
+        self._heading_history: collections.deque[tuple[float, float]] = collections.deque(
+            maxlen=window * 2
+        )
+        self._sog_history: collections.deque[tuple[float, float]] = collections.deque(
+            maxlen=window * 2
+        )
 
         # Tack/gybe detection
         self._last_tack_time: float = 0.0
@@ -139,9 +147,8 @@ class SampleFilter:
                 reject_reasons.append(FilterRejectReason.TURNING)
 
         # --- Tack/gybe detection ---
-        if len(heading_vals) >= 2:
-            if self._detect_tack(heading_vals, now):
-                self._last_tack_time = now
+        if len(heading_vals) >= 2 and self._detect_tack(heading_vals, now):
+            self._last_tack_time = now
 
         if (now - self._last_tack_time) < self._config.tack_exclusion_s:
             reject_reasons.append(FilterRejectReason.TACK_GYBE)
@@ -190,8 +197,7 @@ class SampleFilter:
             self._engine_rpm_available = True
             engine_running = sample.engine_rpm > 0
             engine_state_running = (
-                sample.engine_state is not None
-                and sample.engine_state != "stopped"
+                sample.engine_state is not None and sample.engine_state != "stopped"
             )
 
             if engine_running or engine_state_running:
@@ -226,8 +232,16 @@ class SampleFilter:
             return False  # Not enough data — can't confirm sailing
 
         # Check BSP/TWS correlation — under sail they move together
-        bsp_arr = np.array(bsp_vals[-len(tws_vals):]) if len(bsp_vals) > len(tws_vals) else np.array(bsp_vals)
-        tws_arr = np.array(tws_vals[-len(bsp_vals):]) if len(tws_vals) > len(bsp_vals) else np.array(tws_vals)
+        bsp_arr = (
+            np.array(bsp_vals[-len(tws_vals) :])
+            if len(bsp_vals) > len(tws_vals)
+            else np.array(bsp_vals)
+        )
+        tws_arr = (
+            np.array(tws_vals[-len(bsp_vals) :])
+            if len(tws_vals) > len(bsp_vals)
+            else np.array(tws_vals)
+        )
 
         # Align lengths
         min_len = min(len(bsp_arr), len(tws_arr))
@@ -244,15 +258,14 @@ class SampleFilter:
             return False
 
         # High correlation (>0.5) suggests sailing, not motoring
-        if corr > 0.5:
+        if corr > 0.5 and sample.bsp is not None and sample.sog is not None:
             # Additional check: STW/SOG should not diverge abnormally
-            if sample.bsp is not None and sample.sog is not None:
-                speed_diff = abs(sample.bsp - sample.sog)
-                # If STW and SOG are close (accounting for current),
-                # no motor thrust detected
-                current = sample.current_drift or 0.0
-                if speed_diff < (current + 0.5):  # 0.5 m/s tolerance
-                    return True
+            speed_diff = abs(sample.bsp - sample.sog)
+            # If STW and SOG are close (accounting for current),
+            # no motor thrust detected
+            current = sample.current_drift or 0.0
+            if speed_diff < (current + 0.5):  # 0.5 m/s tolerance
+                return True
 
         return False
 
@@ -284,12 +297,13 @@ class SampleFilter:
         tws_cv = float(np.std(tws_arr) / tws_mean)
 
         # Constant BSP in variable TWS → motoring
-        if (bsp_cv < self._config.motoring_bsp_cv_max
-                and tws_cv > self._config.motoring_tws_cv_min):
+        if bsp_cv < self._config.motoring_bsp_cv_max and tws_cv > self._config.motoring_tws_cv_min:
             logger.debug(
                 "Heuristic motoring detection: BSP CV=%.3f (<%s), TWS CV=%.3f (>%s)",
-                bsp_cv, self._config.motoring_bsp_cv_max,
-                tws_cv, self._config.motoring_tws_cv_min,
+                bsp_cv,
+                self._config.motoring_bsp_cv_max,
+                tws_cv,
+                self._config.motoring_tws_cv_min,
             )
             return PropulsionMode.MOTORING
 
@@ -298,8 +312,7 @@ class SampleFilter:
     def _detect_tack(self, heading_vals: list[float], now: float) -> bool:
         """Detect tack/gybe from heading change within detection window."""
         window_s = self._config.tack_detection_window_s
-        recent = [v for t, v in self._heading_history
-                  if (now - t) < window_s]
+        recent = [v for t, v in self._heading_history if (now - t) < window_s]
 
         if len(recent) < 2:
             return False

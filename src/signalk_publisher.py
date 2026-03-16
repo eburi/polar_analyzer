@@ -7,8 +7,7 @@ Publishes meta deltas once on startup for dashboard display labels.
 from __future__ import annotations
 
 import logging
-import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from models import PerformanceMetrics
@@ -50,21 +49,22 @@ class SignalKPublisher:
 
         meta_values = []
         for path, meta in PUBLISH_META.items():
-            meta_values.append({
-                "path": path,
-                "value": {"meta": meta},
-            })
+            meta_values.append(
+                {
+                    "path": path,
+                    "value": {"meta": meta},
+                }
+            )
 
         delta = {
             "context": "vessels.self",
-            "updates": [{
-                "source": {"label": self._source_label, "type": "signalk"},
-                "timestamp": self._iso_now(),
-                "meta": [
-                    {"path": path, "value": meta}
-                    for path, meta in PUBLISH_META.items()
-                ],
-            }],
+            "updates": [
+                {
+                    "source": {"label": self._source_label, "type": "signalk"},
+                    "timestamp": self._iso_now(),
+                    "meta": [{"path": path, "value": meta} for path, meta in PUBLISH_META.items()],
+                }
+            ],
         }
 
         try:
@@ -103,20 +103,20 @@ class SignalKPublisher:
 
         delta = {
             "context": "vessels.self",
-            "updates": [{
-                "source": {"label": self._source_label, "type": "signalk"},
-                "timestamp": self._iso_now(),
-                "values": values,
-            }],
+            "updates": [
+                {
+                    "source": {"label": self._source_label, "type": "signalk"},
+                    "timestamp": self._iso_now(),
+                    "values": values,
+                }
+            ],
         }
 
         try:
             await self._send_fn(delta)
             self._publish_count += 1
             if self._publish_count <= 2:
-                logger.info(
-                    "Published performance delta (%d values)", len(values)
-                )
+                logger.info("Published performance delta (%d values)", len(values))
         except Exception as exc:
             logger.warning("Failed to publish performance: %s", exc)
 
@@ -126,4 +126,4 @@ class SignalKPublisher:
 
     @staticmethod
     def _iso_now() -> str:
-        return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+        return datetime.now(UTC).isoformat().replace("+00:00", "Z")

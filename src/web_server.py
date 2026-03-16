@@ -20,9 +20,9 @@ from aiohttp import web
 from config import Config
 from models import (
     MS_TO_KT,
+    RAD_TO_DEG,
     PerformanceMetrics,
     PropulsionOverride,
-    RAD_TO_DEG,
 )
 from performance_calc import PerformanceCalc
 from polar_engine import PolarEngine
@@ -130,7 +130,9 @@ class WebServer:
                 "name": active_trip.name,
                 "started_at": active_trip.started_at,
                 "sample_count": active_trip.sample_count,
-            } if active_trip else None,
+            }
+            if active_trip
+            else None,
             "instruments": {
                 "tws_kt": round(snap.tws * MS_TO_KT, 1) if snap.tws else None,
                 "twa_deg": round(abs(snap.twa) * RAD_TO_DEG, 1) if snap.twa else None,
@@ -155,11 +157,19 @@ class WebServer:
             "polar_speed_ratio": round(m.polar_speed_ratio, 3) if m.polar_speed_ratio else None,
             "vmg_kt": round(m.vmg * MS_TO_KT, 2) if m.vmg else None,
             "beat_angle_deg": round(m.beat_angle * RAD_TO_DEG, 1) if m.beat_angle else None,
-            "beat_angle_vmg_kt": round(m.beat_angle_vmg * MS_TO_KT, 2) if m.beat_angle_vmg else None,
-            "beat_angle_target_kt": round(m.beat_angle_target_speed * MS_TO_KT, 2) if m.beat_angle_target_speed else None,
+            "beat_angle_vmg_kt": round(m.beat_angle_vmg * MS_TO_KT, 2)
+            if m.beat_angle_vmg
+            else None,
+            "beat_angle_target_kt": round(m.beat_angle_target_speed * MS_TO_KT, 2)
+            if m.beat_angle_target_speed
+            else None,
             "gybe_angle_deg": round(m.gybe_angle * RAD_TO_DEG, 1) if m.gybe_angle else None,
-            "gybe_angle_vmg_kt": round(m.gybe_angle_vmg * MS_TO_KT, 2) if m.gybe_angle_vmg else None,
-            "gybe_angle_target_kt": round(m.gybe_angle_target_speed * MS_TO_KT, 2) if m.gybe_angle_target_speed else None,
+            "gybe_angle_vmg_kt": round(m.gybe_angle_vmg * MS_TO_KT, 2)
+            if m.gybe_angle_vmg
+            else None,
+            "gybe_angle_target_kt": round(m.gybe_angle_target_speed * MS_TO_KT, 2)
+            if m.gybe_angle_target_speed
+            else None,
             "target_angle_deg": round(m.target_angle * RAD_TO_DEG, 1) if m.target_angle else None,
             "target_speed_kt": round(m.target_speed * MS_TO_KT, 2) if m.target_speed else None,
         }
@@ -196,10 +206,12 @@ class WebServer:
                     "twa_deg": [p[0] for p in curve],
                     "bsp_kt": [round(p[1], 2) for p in curve],
                 }
-        return web.json_response({
-            "tws_bins": table.tws_bins_kt,
-            "curves": curves,
-        })
+        return web.json_response(
+            {
+                "tws_bins": table.tws_bins_kt,
+                "curves": curves,
+            }
+        )
 
     async def _handle_polar_density(self, request: web.Request) -> web.Response:
         density = self._engine.get_data_density()
@@ -209,6 +221,7 @@ class WebServer:
         state_str = request.match_info["state"]
         try:
             from models import SeaState
+
             sea_state = SeaState(state_str)
         except ValueError:
             return web.json_response({"error": f"invalid sea state: {state_str}"}, status=400)
@@ -245,31 +258,37 @@ class WebServer:
     async def _handle_trips_list(self, request: web.Request) -> web.Response:
         trips = self._trip_manager.list_trips()
         active = self._trip_manager.active_trip
-        return web.json_response({
-            "trips": trips,
-            "active_trip_id": active.trip_id if active else None,
-        })
+        return web.json_response(
+            {
+                "trips": trips,
+                "active_trip_id": active.trip_id if active else None,
+            }
+        )
 
     async def _handle_trip_start(self, request: web.Request) -> web.Response:
         body = await request.json()
         name = body.get("name", f"Trip {time.strftime('%Y-%m-%d %H:%M')}")
         notes = body.get("notes", "")
         trip = self._trip_manager.start_trip(name, notes)
-        return web.json_response({
-            "status": "ok",
-            "trip_id": trip.trip_id,
-            "name": trip.name,
-        })
+        return web.json_response(
+            {
+                "status": "ok",
+                "trip_id": trip.trip_id,
+                "name": trip.name,
+            }
+        )
 
     async def _handle_trip_end(self, request: web.Request) -> web.Response:
         trip = self._trip_manager.end_trip()
         if trip is None:
             return web.json_response({"error": "no active trip"}, status=400)
-        return web.json_response({
-            "status": "ok",
-            "trip_id": trip.trip_id,
-            "sample_count": trip.sample_count,
-        })
+        return web.json_response(
+            {
+                "status": "ok",
+                "trip_id": trip.trip_id,
+                "sample_count": trip.sample_count,
+            }
+        )
 
     async def _handle_trip_detail(self, request: web.Request) -> web.Response:
         trip_id = request.match_info["trip_id"]

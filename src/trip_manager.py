@@ -15,7 +15,7 @@ from pathlib import Path
 from typing import Any
 
 from config import Config
-from models import PolarTable, SeaState, Trip, ValidSample
+from models import PolarTable, Trip, ValidSample
 from polar_engine import PolarEngine
 from polar_store import PolarStore
 
@@ -100,7 +100,9 @@ class TripManager:
 
         logger.info(
             "Ended trip '%s': %d samples, %d cells merged to master",
-            trip.name, trip.sample_count, updated,
+            trip.name,
+            trip.sample_count,
+            updated,
         )
 
         self._active_trip = None
@@ -152,6 +154,7 @@ class TripManager:
         if not trip_dir.exists():
             return False
         import shutil
+
         shutil.rmtree(trip_dir)
         logger.info("Deleted trip %s", trip_id)
         return True

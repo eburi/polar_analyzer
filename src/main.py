@@ -19,8 +19,8 @@ from pathlib import Path
 
 from aiohttp import web
 
-from config import Config
-from models import InstantSample, PerformanceMetrics, SignalKUpdate, ValidSample
+from config import VERSION, Config
+from models import InstantSample, PerformanceMetrics, SignalKUpdate
 from performance_calc import PerformanceCalc
 from polar_engine import PolarEngine
 from polar_store import PolarStore
@@ -88,7 +88,9 @@ async def sampler_task(
             pct = (valid / total * 100) if total > 0 else 0
             logger.info(
                 "Sampler: %d total, %d valid (%.1f%%), propulsion=%s",
-                total, valid, pct,
+                total,
+                valid,
+                pct,
                 result.propulsion_mode.value,
             )
 
@@ -117,7 +119,9 @@ async def auth_task(
         except Exception as exc:
             logger.warning(
                 "Auth attempt %d/%d failed: %s",
-                attempt + 1, max_retries, exc,
+                attempt + 1,
+                max_retries,
+                exc,
             )
             await asyncio.sleep(10)
 
@@ -233,8 +237,17 @@ async def console_task(
         logger.info(
             "TWS=%skt TWA=%s%s BSP=%skt SOG=%skt Waves=%s Mode=%s "
             "Perf=%s Cells=%d Sess=%d Updates=%d",
-            tws_kt, twa_deg, side, bsp_kt, sog_kt, wave, prop,
-            perf_str, valid_cells, session_samples, store.update_count,
+            tws_kt,
+            twa_deg,
+            side,
+            bsp_kt,
+            sog_kt,
+            wave,
+            prop,
+            perf_str,
+            valid_cells,
+            session_samples,
+            store.update_count,
         )
 
 
@@ -253,12 +266,18 @@ def _metrics_to_sse(metrics: PerformanceMetrics, sample: InstantSample) -> dict:
         "sog_kt": round(sample.sog * MS_TO_KT, 1) if sample.sog else None,
         # Performance
         "polar_speed_kt": round(metrics.polar_speed * MS_TO_KT, 2) if metrics.polar_speed else None,
-        "polar_speed_ratio": round(metrics.polar_speed_ratio, 3) if metrics.polar_speed_ratio else None,
+        "polar_speed_ratio": round(metrics.polar_speed_ratio, 3)
+        if metrics.polar_speed_ratio
+        else None,
         "vmg_kt": round(metrics.vmg * MS_TO_KT, 2) if metrics.vmg else None,
         "beat_angle_deg": round(metrics.beat_angle * RAD_TO_DEG, 1) if metrics.beat_angle else None,
         "gybe_angle_deg": round(metrics.gybe_angle * RAD_TO_DEG, 1) if metrics.gybe_angle else None,
-        "target_angle_deg": round(metrics.target_angle * RAD_TO_DEG, 1) if metrics.target_angle else None,
-        "target_speed_kt": round(metrics.target_speed * MS_TO_KT, 2) if metrics.target_speed else None,
+        "target_angle_deg": round(metrics.target_angle * RAD_TO_DEG, 1)
+        if metrics.target_angle
+        else None,
+        "target_speed_kt": round(metrics.target_speed * MS_TO_KT, 2)
+        if metrics.target_speed
+        else None,
     }
     return data
 
@@ -270,7 +289,9 @@ def _metrics_to_sse(metrics: PerformanceMetrics, sample: InstantSample) -> dict:
 
 async def live_mode(config: Config) -> None:
     """Connect to SignalK, record data, compute polars, serve web UI."""
-    logger.info("Starting Polar Analyzer in live mode")
+    logger.info(
+        "Starting Polar Analyzer v%s (data format v%s) in live mode", config.app_version, VERSION
+    )
     logger.info("SignalK: %s", config.signalk_url)
     logger.info("Data dir: %s", config.data_dir)
     logger.info("Web port: %d", config.web_port)
@@ -291,7 +312,7 @@ async def live_mode(config: Config) -> None:
     # --- Phase 2 components ---
     engine = PolarEngine(config)
     polar_store = PolarStore(config)
-    sea_state = SeaStateClassifier(config)
+    _sea_state = SeaStateClassifier(config)  # will be used for sea-state-aware polars
 
     # Load existing polar data from disk
     existing_polar = polar_store.load()
@@ -307,8 +328,13 @@ async def live_mode(config: Config) -> None:
 
     # --- Phase 4 components ---
     web_server = WebServer(
-        config, engine, polar_store, perf_calc,
-        trip_manager, state_store, sample_filter_inst,
+        config,
+        engine,
+        polar_store,
+        perf_calc,
+        trip_manager,
+        state_store,
+        sample_filter_inst,
     )
 
     # Launch tasks
@@ -317,8 +343,12 @@ async def live_mode(config: Config) -> None:
         asyncio.create_task(ingest_task(queue, state_store), name="ingest"),
         asyncio.create_task(
             sampler_task(
-                config, state_store, sample_filter_inst, recorder,
-                engine, trip_manager,
+                config,
+                state_store,
+                sample_filter_inst,
+                recorder,
+                engine,
+                trip_manager,
             ),
             name="sampler",
         ),
@@ -328,8 +358,12 @@ async def live_mode(config: Config) -> None:
         ),
         asyncio.create_task(
             publisher_task(
-                config, publisher, perf_calc, state_store,
-                web_server, auth_ready,
+                config,
+                publisher,
+                perf_calc,
+                state_store,
+                web_server,
+                auth_ready,
             ),
             name="publisher",
         ),
@@ -402,7 +436,6 @@ async def inspect_mode(config: Config) -> None:
     # Use subscribe=all to discover paths
     inspect_url = config.signalk_url.replace("subscribe=none", "subscribe=all")
 
-    queue: asyncio.Queue[SignalKUpdate] = asyncio.Queue(maxsize=5000)
     paths_seen: dict[str, str] = {}
 
     # Collect for a few seconds
@@ -432,7 +465,7 @@ async def inspect_mode(config: Config) -> None:
                             value = val.get("value")
                             if path:
                                 paths_seen[path] = f"{value} (source: {label})"
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 continue
 
         await ws.close()
@@ -464,7 +497,6 @@ async def replay_mode(config: Config, replay_file: str) -> None:
     sample_filter_inst = SampleFilter(config)
     engine = PolarEngine(config)
     polar_store = PolarStore(config)
-    perf_calc = PerformanceCalc(config, engine)
     trip_manager = TripManager(config, engine, polar_store)
 
     # Load existing polar
@@ -532,7 +564,10 @@ async def replay_mode(config: Config, replay_file: str) -> None:
     pct = (valid / total * 100) if total > 0 else 0
     logger.info(
         "Replay complete: %d total, %d valid (%.1f%%), %d polar cells",
-        total, valid, pct, valid_cells,
+        total,
+        valid,
+        pct,
+        valid_cells,
     )
 
 
@@ -575,7 +610,8 @@ def main() -> None:
         help="JSONL file to replay (required for replay mode)",
     )
     parser.add_argument(
-        "-v", "--verbose",
+        "-v",
+        "--verbose",
         action="store_true",
         help="Enable debug logging",
     )
@@ -604,7 +640,9 @@ def main() -> None:
     # Derive HTTP URL from WS URL if not explicitly set
     if args.url and not args.http_url:
         ws_url = args.url
-        http_url = ws_url.split("/signalk")[0].replace("ws://", "http://").replace("wss://", "https://")
+        http_url = (
+            ws_url.split("/signalk")[0].replace("ws://", "http://").replace("wss://", "https://")
+        )
         config.signalk_http_url = http_url
 
     # Run

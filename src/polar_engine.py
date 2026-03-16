@@ -8,7 +8,6 @@ along the TWA axis for each TWS column.
 from __future__ import annotations
 
 import logging
-import math
 import time
 
 import numpy as np
@@ -16,10 +15,7 @@ from scipy.interpolate import CubicSpline
 
 from config import Config
 from models import (
-    DEG_TO_RAD,
-    KT_TO_MS,
     MS_TO_KT,
-    PolarCell,
     PolarTable,
     SeaState,
     ValidSample,
@@ -123,8 +119,7 @@ class PolarEngine:
                 # Existing cell — EMA blend
                 if master_cell.bsp_percentile is not None:
                     master_cell.bsp_percentile = (
-                        alpha * session_bsp
-                        + (1 - alpha) * master_cell.bsp_percentile
+                        alpha * session_bsp + (1 - alpha) * master_cell.bsp_percentile
                     )
                 else:
                     master_cell.bsp_percentile = session_bsp
@@ -165,7 +160,8 @@ class PolarEngine:
         self._master = table
         logger.info(
             "Master polar loaded: %d cells, version %d",
-            len(table.cells), table.version,
+            len(table.cells),
+            table.version,
         )
 
     def interpolate_bsp(self, tws_kt: float, twa_deg: float) -> float | None:
@@ -175,7 +171,9 @@ class PolarEngine:
         """
         return self._bilinear_interpolate(self._master, tws_kt, twa_deg)
 
-    def get_polar_curve(self, tws_kt: float, table: PolarTable | None = None) -> list[tuple[float, float]]:
+    def get_polar_curve(
+        self, tws_kt: float, table: PolarTable | None = None
+    ) -> list[tuple[float, float]]:
         """Get the polar curve for a given TWS as [(twa_deg, bsp_kt), ...].
 
         Uses smoothed values where available.
@@ -281,7 +279,10 @@ class PolarEngine:
                         cell.bsp_smoothed = cell.bsp_percentile
 
     def _bilinear_interpolate(
-        self, table: PolarTable, tws_kt: float, twa_deg: float,
+        self,
+        table: PolarTable,
+        tws_kt: float,
+        twa_deg: float,
     ) -> float | None:
         """Bilinear interpolation of BSP from the polar grid.
 

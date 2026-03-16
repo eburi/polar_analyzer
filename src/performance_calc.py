@@ -6,17 +6,17 @@ instrument data. Updates at 1Hz, results are published to SignalK.
 
 from __future__ import annotations
 
-import math
 import logging
+import math
 
 from config import Config
 from models import (
     DEG_TO_RAD,
-    InstantSample,
     KT_TO_MS,
     MS_TO_KT,
-    PerformanceMetrics,
     RAD_TO_DEG,
+    InstantSample,
+    PerformanceMetrics,
 )
 from polar_engine import PolarEngine
 

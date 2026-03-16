@@ -36,6 +36,7 @@ class SignalKClient:
         self._auth_token: str | None = None
         self._running = False
         self._reconnect_index = 0
+        self._reconnect_task: asyncio.Task[None] | None = None
 
     @property
     def self_context(self) -> str | None:
@@ -51,7 +52,7 @@ class SignalKClient:
         self._auth_token = token
         if self.is_connected:
             logger.info("Auth token set — forcing reconnect for authenticated session")
-            asyncio.ensure_future(self._force_reconnect())
+            self._reconnect_task = asyncio.ensure_future(self._force_reconnect())
 
     async def _force_reconnect(self) -> None:
         """Close the current WebSocket to trigger reconnection."""
@@ -131,10 +132,7 @@ class SignalKClient:
 
     async def _subscribe(self) -> None:
         """Send subscription message for all configured paths."""
-        subscribe_list = [
-            {"path": sub.path, "period": sub.period_ms}
-            for sub in SUBSCRIPTIONS
-        ]
+        subscribe_list = [{"path": sub.path, "period": sub.period_ms} for sub in SUBSCRIPTIONS]
         msg = {
             "context": "vessels.self",
             "subscribe": subscribe_list,
@@ -145,11 +143,9 @@ class SignalKClient:
     async def _process_delta(self, data: dict[str, Any]) -> None:
         """Extract individual path updates from a SignalK delta message."""
         context = data.get("context", "")
-        # Only process self-vessel data
-        if self._self_context and context != self._self_context:
-            # Also accept "vessels.self" shorthand
-            if context != "vessels.self":
-                return
+        # Only process self-vessel data (also accept "vessels.self" shorthand)
+        if self._self_context and context != self._self_context and context != "vessels.self":
+            return
 
         for update in data.get("updates", []):
             timestamp = update.get("timestamp", "")
@@ -172,14 +168,12 @@ class SignalKClient:
                         self._queue.put_nowait(sk_update)
                     except asyncio.QueueFull:
                         # Drop oldest on overflow
-                        try:
+                        import contextlib
+
+                        with contextlib.suppress(asyncio.QueueEmpty):
                             self._queue.get_nowait()
-                        except asyncio.QueueEmpty:
-                            pass
-                        try:
+                        with contextlib.suppress(asyncio.QueueFull):
                             self._queue.put_nowait(sk_update)
-                        except asyncio.QueueFull:
-                            pass
 
     def _next_reconnect_delay(self) -> float:
         """Exponential backoff for reconnection."""

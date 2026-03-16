@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import math
-import time
 
 import numpy as np
 import pytest
@@ -17,7 +16,6 @@ from models import (
     SeaState,
 )
 from sample_filter import SampleFilter
-
 
 DEG_TO_RAD = math.pi / 180.0
 KT_TO_MS = 1 / 1.94384
@@ -106,9 +104,15 @@ class TestFilterBasics:
             )
             filt.process(s)
 
-        result = filt.process(make_sample(
-            1015.0, tws_ms=5.0, twa_rad=1.5, bsp_ms=3.0, heading=0.5,
-        ))
+        result = filt.process(
+            make_sample(
+                1015.0,
+                tws_ms=5.0,
+                twa_rad=1.5,
+                bsp_ms=3.0,
+                heading=0.5,
+            )
+        )
         assert result.passed
         assert result.valid_sample is not None
 
@@ -124,9 +128,16 @@ class TestFilterBasics:
             )
             filt.process(s)
 
-        result = filt.process(make_sample(
-            1015.0, tws_ms=5.0, twa_rad=-1.5, bsp_ms=3.0, heading=0.5, wave_height=0.3,
-        ))
+        result = filt.process(
+            make_sample(
+                1015.0,
+                tws_ms=5.0,
+                twa_rad=-1.5,
+                bsp_ms=3.0,
+                heading=0.5,
+                wave_height=0.3,
+            )
+        )
         assert result.passed
         vs = result.valid_sample
         assert vs is not None
@@ -146,7 +157,7 @@ class TestTWSInstability:
         rng = np.random.RandomState(42)
         for i in range(15):
             tws = 5.0 + rng.uniform(-3.0, 3.0)  # High variance (CV > 15%)
-            bsp = 3.0 + rng.uniform(-0.5, 0.5)   # Moderate variance (CV > 5%)
+            bsp = 3.0 + rng.uniform(-0.5, 0.5)  # Moderate variance (CV > 5%)
             s = make_sample(1000.0 + i, tws_ms=max(tws, 2.0), bsp_ms=bsp, heading=0.5)
             filt.process(s)
 

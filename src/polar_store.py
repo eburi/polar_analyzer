@@ -8,7 +8,6 @@ from __future__ import annotations
 
 import json
 import logging
-import shutil
 import time
 from pathlib import Path
 from typing import Any
@@ -44,7 +43,9 @@ class PolarStore:
         path.write_text(json.dumps(data, indent=2))
         logger.info(
             "Saved polar: %d cells, version %d → %s",
-            len(table.cells), table.version, path,
+            len(table.cells),
+            table.version,
+            path,
         )
         return path
 
@@ -63,7 +64,9 @@ class PolarStore:
             table = self._dict_to_table(data)
             logger.info(
                 "Loaded polar: %d cells, version %d from %s",
-                len(table.cells), table.version, path,
+                len(table.cells),
+                table.version,
+                path,
             )
             return table
         except Exception as exc:
@@ -86,15 +89,17 @@ class PolarStore:
         for f in sorted(self.archive_dir.glob("polars_archive_*.json")):
             try:
                 data = json.loads(f.read_text())
-                archives.append({
-                    "filename": f.name,
-                    "path": str(f),
-                    "version": data.get("version", 0),
-                    "created_at": data.get("created_at", 0),
-                    "updated_at": data.get("updated_at", 0),
-                    "cell_count": len(data.get("cells", {})),
-                    "sea_state": data.get("sea_state", "unknown"),
-                })
+                archives.append(
+                    {
+                        "filename": f.name,
+                        "path": str(f),
+                        "version": data.get("version", 0),
+                        "created_at": data.get("created_at", 0),
+                        "updated_at": data.get("updated_at", 0),
+                        "cell_count": len(data.get("cells", {})),
+                        "sea_state": data.get("sea_state", "unknown"),
+                    }
+                )
             except Exception:
                 archives.append({"filename": f.name, "error": "unreadable"})
         return archives
@@ -152,7 +157,7 @@ class PolarStore:
             version=data.get("version", 1),
         )
 
-        for key_str, cell_data in data.get("cells", {}).items():
+        for _key_str, cell_data in data.get("cells", {}).items():
             tws = cell_data["tws_kt"]
             twa = cell_data["twa_deg"]
             cell = PolarCell(
