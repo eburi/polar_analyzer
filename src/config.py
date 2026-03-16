@@ -30,15 +30,31 @@ class Config:
 
     @property
     def signalk_ws_url(self) -> str:
-        """Derive WebSocket streaming URL from the base SignalK URL."""
+        """Derive WebSocket streaming URL from the base SignalK URL.
+
+        Accepts either an HTTP base URL (``http://host:3000``) or a legacy
+        full WebSocket URL (``ws://host:3000/signalk/v1/stream?subscribe=none``).
+        """
         base = self.signalk_url.rstrip("/")
+        # Already a full WebSocket URL — return as-is
+        if base.startswith(("ws://", "wss://")) and "/signalk/" in base:
+            return base
         ws_base = base.replace("https://", "wss://").replace("http://", "ws://")
         return f"{ws_base}/signalk/v1/stream?subscribe=none"
 
     @property
     def signalk_http_url(self) -> str:
-        """HTTP base URL (the signalk_url itself, normalised)."""
-        return self.signalk_url.rstrip("/")
+        """HTTP base URL, derived from signalk_url.
+
+        Handles both ``http://host:3000`` and legacy ``ws://host:3000/...``
+        formats so the auth module always gets a clean HTTP base URL.
+        """
+        base = self.signalk_url.rstrip("/")
+        # Strip WebSocket path if a legacy full WS URL was provided
+        if base.startswith(("ws://", "wss://")):
+            base = base.split("/signalk/")[0] if "/signalk/" in base else base
+            base = base.replace("wss://", "https://").replace("ws://", "http://")
+        return base
 
     # --- Auth ---
     device_name: str = "Polar Analyzer"
