@@ -1,0 +1,37 @@
+name: Build and Publish
+
+on:
+  push:
+    branches: [master]
+    tags:
+      - 'v*'
+  pull_request:
+    branches: [master]
+
+jobs:
+  build:
+    name: Build add-on
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Login to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Copy src into add-on directory
+        run: cp -r src polar_analyzer/src
+
+      - name: Build and push
+        uses: home-assistant/builder@2026.02.1
+        with:
+          args: |
+            --amd64 --aarch64 \
+            --target polar_analyzer
