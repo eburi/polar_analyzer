@@ -1,0 +1,25 @@
+name: "Polar Analyzer"
+description: "Learns boat polars from live SignalK sailing data and publishes real-time performance metrics"
+version: "0.1.0"
+slug: "polar_analyzer"
+url: "https://github.com/eburi/polar_analyzer"
+arch:
+  - aarch64
+  - amd64
+  - armv7
+startup: "application"
+boot: "auto"
+ports:
+  "3001/tcp": 3001
+ports_description:
+  "3001/tcp": "Web dashboard"
+map:
+  - "addon_config:rw"
+options:
+  signalk_url: "ws://primrose.local:3000/signalk/v1/stream?subscribe=none"
+  signalk_http_url: "http://primrose.local:3000"
+  log_level: "info"
+schema:
+  signalk_url: "url"
+  signalk_http_url: "url"
+  log_level: "list(debug|info|warning|error)"

@@ -1,0 +1,496 @@
+/* Polar Analyzer — dashboard styles
+   Designed to be lightweight for resource-constrained devices (RPi). */
+
+:root {
+    --bg: #1a1a2e;
+    --bg-card: #16213e;
+    --bg-card-hover: #1a2744;
+    --text: #e0e0e0;
+    --text-dim: #8892a4;
+    --accent: #0f9b8e;
+    --accent-light: #14d9c4;
+    --warning: #e6a23c;
+    --danger: #f56c6c;
+    --success: #67c23a;
+    --border: #2a3a5c;
+    --font: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    --mono: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+}
+
+/* --- Header --- */
+
+header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 20px;
+    background: var(--bg-card);
+    border-bottom: 1px solid var(--border);
+}
+
+header h1 {
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+.status {
+    font-size: 12px;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-weight: 500;
+}
+
+.status.connected {
+    background: rgba(103, 194, 58, 0.15);
+    color: var(--success);
+}
+
+.status.disconnected {
+    background: rgba(245, 108, 108, 0.15);
+    color: var(--danger);
+}
+
+/* --- Navigation --- */
+
+nav {
+    display: flex;
+    gap: 0;
+    background: var(--bg-card);
+    border-bottom: 1px solid var(--border);
+    padding: 0 12px;
+    overflow-x: auto;
+}
+
+.nav-btn {
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    padding: 10px 18px;
+    font-size: 13px;
+    font-family: var(--font);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    white-space: nowrap;
+    transition: color 0.2s, border-color 0.2s;
+}
+
+.nav-btn:hover {
+    color: var(--text);
+}
+
+.nav-btn.active {
+    color: var(--accent-light);
+    border-bottom-color: var(--accent-light);
+}
+
+/* --- Panels --- */
+
+.panel {
+    display: none;
+    padding: 16px;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.panel.active {
+    display: block;
+}
+
+/* --- Cards --- */
+
+.card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+}
+
+.card h2 {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 12px;
+}
+
+/* --- Dashboard Grid --- */
+
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 12px;
+}
+
+.mini-polar-card {
+    grid-column: span 2;
+}
+
+/* --- Gauges --- */
+
+.gauge-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+}
+
+.gauge {
+    text-align: center;
+}
+
+.gauge-value {
+    font-family: var(--mono);
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.2;
+}
+
+.gauge-value.large {
+    font-size: 42px;
+    color: var(--accent-light);
+}
+
+.gauge-label {
+    font-size: 11px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 2px;
+}
+
+/* Performance gauge coloring */
+.perf-gauge .gauge-value.perf-low { color: var(--danger); }
+.perf-gauge .gauge-value.perf-mid { color: var(--warning); }
+.perf-gauge .gauge-value.perf-high { color: var(--success); }
+.perf-gauge .gauge-value.perf-great { color: var(--accent-light); }
+
+/* --- Angles --- */
+
+.angles-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+.angle-block h3 {
+    font-size: 12px;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+}
+
+.angle-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 3px 0;
+    font-size: 13px;
+}
+
+.angle-label {
+    color: var(--text-dim);
+}
+
+.angle-value {
+    font-family: var(--mono);
+    font-weight: 600;
+}
+
+/* --- Propulsion Controls --- */
+
+.propulsion-controls {
+    text-align: center;
+}
+
+.propulsion-buttons {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 10px;
+}
+
+.prop-btn {
+    flex: 1;
+    padding: 8px 10px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-dim);
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    font-family: var(--font);
+    transition: all 0.2s;
+}
+
+.prop-btn:hover {
+    border-color: var(--accent);
+    color: var(--text);
+}
+
+.prop-btn.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+}
+
+.propulsion-status {
+    font-size: 12px;
+    color: var(--text-dim);
+}
+
+/* --- Stats --- */
+
+.stats-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.stat-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    padding: 4px 0;
+    border-bottom: 1px solid rgba(42, 58, 92, 0.5);
+}
+
+.stat-row span:first-child {
+    color: var(--text-dim);
+}
+
+.stat-row span:last-child {
+    font-family: var(--mono);
+    font-weight: 600;
+}
+
+/* --- Buttons --- */
+
+.btn {
+    padding: 8px 16px;
+    border: 1px solid var(--border);
+    background: var(--bg-card);
+    color: var(--text);
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    font-family: var(--font);
+    transition: all 0.2s;
+}
+
+.btn:hover {
+    background: var(--bg-card-hover);
+    border-color: var(--accent);
+}
+
+.btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.btn-primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+}
+
+.btn-primary:hover {
+    background: var(--accent-light);
+}
+
+.btn-warning {
+    border-color: var(--warning);
+    color: var(--warning);
+}
+
+.btn-warning:hover {
+    background: rgba(230, 162, 60, 0.15);
+}
+
+.btn-danger {
+    border-color: var(--danger);
+    color: var(--danger);
+}
+
+.btn-danger:hover {
+    background: rgba(245, 108, 108, 0.15);
+}
+
+/* --- Polar Controls --- */
+
+.polar-controls {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 10px 0;
+    flex-wrap: wrap;
+}
+
+.control-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.control-group label {
+    font-size: 12px;
+    color: var(--text-dim);
+}
+
+.control-group select {
+    padding: 6px 10px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 4px;
+    font-size: 13px;
+    font-family: var(--font);
+}
+
+.polar-chart {
+    width: 100%;
+    min-height: 500px;
+    background: var(--bg-card);
+    border-radius: 8px;
+}
+
+#mini-polar-plot {
+    width: 100%;
+    height: 300px;
+}
+
+/* --- Trips --- */
+
+.trips-controls {
+    margin-bottom: 12px;
+}
+
+.trip-form {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.trip-form input {
+    padding: 8px 12px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 6px;
+    font-size: 13px;
+    font-family: var(--font);
+}
+
+.trip-form input:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+
+.trip-banner {
+    background: rgba(15, 155, 142, 0.15);
+    border: 1px solid var(--accent);
+    border-radius: 6px;
+    padding: 10px 16px;
+    margin-bottom: 12px;
+    font-size: 13px;
+}
+
+/* --- Tables --- */
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+.data-table th {
+    text-align: left;
+    padding: 8px 12px;
+    background: var(--bg-card);
+    border-bottom: 1px solid var(--border);
+    color: var(--text-dim);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.data-table td {
+    padding: 8px 12px;
+    border-bottom: 1px solid rgba(42, 58, 92, 0.3);
+}
+
+.data-table tbody tr:hover {
+    background: var(--bg-card-hover);
+}
+
+/* --- Admin --- */
+
+.admin-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 12px;
+}
+
+.admin-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.admin-result {
+    margin-top: 10px;
+    font-size: 13px;
+    color: var(--text-dim);
+    min-height: 20px;
+}
+
+/* --- Responsive --- */
+
+@media (max-width: 768px) {
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .mini-polar-card {
+        grid-column: span 1;
+    }
+
+    .gauge-value {
+        font-size: 22px;
+    }
+
+    .gauge-value.large {
+        font-size: 32px;
+    }
+
+    .admin-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .trip-form {
+        flex-direction: column;
+    }
+
+    .trip-form input {
+        width: 100%;
+    }
+}
+
+/* --- Plotly overrides for dark theme --- */
+
+.js-plotly-plot .plotly .modebar {
+    right: 8px !important;
+}

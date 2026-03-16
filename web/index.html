@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Polar Analyzer</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+</head>
+<body>
+    <header>
+        <h1>Polar Analyzer</h1>
+        <div id="connection-status" class="status disconnected">Disconnected</div>
+    </header>
+
+    <nav>
+        <button class="nav-btn active" data-panel="dashboard">Dashboard</button>
+        <button class="nav-btn" data-panel="polar">Polar Diagram</button>
+        <button class="nav-btn" data-panel="trips">Trips</button>
+        <button class="nav-btn" data-panel="admin">Admin</button>
+    </nav>
+
+    <!-- ============================================================ -->
+    <!-- DASHBOARD PANEL                                              -->
+    <!-- ============================================================ -->
+    <section id="panel-dashboard" class="panel active">
+        <div class="dashboard-grid">
+            <!-- Instruments -->
+            <div class="card instruments-card">
+                <h2>Instruments</h2>
+                <div class="gauge-grid">
+                    <div class="gauge">
+                        <div class="gauge-value" id="g-tws">---</div>
+                        <div class="gauge-label">TWS (kt)</div>
+                    </div>
+                    <div class="gauge">
+                        <div class="gauge-value" id="g-twa">---</div>
+                        <div class="gauge-label">TWA</div>
+                    </div>
+                    <div class="gauge">
+                        <div class="gauge-value" id="g-bsp">---</div>
+                        <div class="gauge-label">BSP (kt)</div>
+                    </div>
+                    <div class="gauge">
+                        <div class="gauge-value" id="g-sog">---</div>
+                        <div class="gauge-label">SOG (kt)</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Performance -->
+            <div class="card performance-card">
+                <h2>Performance</h2>
+                <div class="gauge-grid">
+                    <div class="gauge perf-gauge">
+                        <div class="gauge-value large" id="g-perf">---</div>
+                        <div class="gauge-label">% of Polar</div>
+                    </div>
+                    <div class="gauge">
+                        <div class="gauge-value" id="g-polar-speed">---</div>
+                        <div class="gauge-label">Target BSP (kt)</div>
+                    </div>
+                    <div class="gauge">
+                        <div class="gauge-value" id="g-vmg">---</div>
+                        <div class="gauge-label">VMG (kt)</div>
+                    </div>
+                    <div class="gauge">
+                        <div class="gauge-value" id="g-target-angle">---</div>
+                        <div class="gauge-label">Target TWA</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Optimal Angles -->
+            <div class="card angles-card">
+                <h2>Optimal Angles</h2>
+                <div class="angles-grid">
+                    <div class="angle-block">
+                        <h3>Upwind</h3>
+                        <div class="angle-row">
+                            <span class="angle-label">Beat angle:</span>
+                            <span class="angle-value" id="g-beat-angle">---</span>
+                        </div>
+                        <div class="angle-row">
+                            <span class="angle-label">Beat VMG:</span>
+                            <span class="angle-value" id="g-beat-vmg">--- kt</span>
+                        </div>
+                    </div>
+                    <div class="angle-block">
+                        <h3>Downwind</h3>
+                        <div class="angle-row">
+                            <span class="angle-label">Gybe angle:</span>
+                            <span class="angle-value" id="g-gybe-angle">---</span>
+                        </div>
+                        <div class="angle-row">
+                            <span class="angle-label">Gybe VMG:</span>
+                            <span class="angle-value" id="g-gybe-vmg">--- kt</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Propulsion Mode -->
+            <div class="card propulsion-card">
+                <h2>Propulsion</h2>
+                <div class="propulsion-controls">
+                    <div class="propulsion-buttons">
+                        <button class="prop-btn active" data-mode="auto">Auto-detect</button>
+                        <button class="prop-btn" data-mode="sailing">Sailing</button>
+                        <button class="prop-btn" data-mode="motoring">Motoring</button>
+                    </div>
+                    <div class="propulsion-status">
+                        Mode: <span id="prop-mode">auto</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mini Polar Plot -->
+            <div class="card mini-polar-card">
+                <h2>Current Polar</h2>
+                <div id="mini-polar-plot"></div>
+            </div>
+
+            <!-- Session Stats -->
+            <div class="card stats-card">
+                <h2>Session</h2>
+                <div class="stats-list">
+                    <div class="stat-row">
+                        <span>Valid cells:</span>
+                        <span id="s-valid-cells">0</span>
+                    </div>
+                    <div class="stat-row">
+                        <span>Session samples:</span>
+                        <span id="s-session-samples">0</span>
+                    </div>
+                    <div class="stat-row">
+                        <span>Polar version:</span>
+                        <span id="s-polar-version">0</span>
+                    </div>
+                    <div class="stat-row">
+                        <span>Updates received:</span>
+                        <span id="s-updates">0</span>
+                    </div>
+                    <div class="stat-row">
+                        <span>Active trip:</span>
+                        <span id="s-active-trip">None</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- POLAR DIAGRAM PANEL                                          -->
+    <!-- ============================================================ -->
+    <section id="panel-polar" class="panel">
+        <div class="polar-controls">
+            <div class="control-group">
+                <label>Table:</label>
+                <select id="polar-table-select">
+                    <option value="master">Master</option>
+                    <option value="session">Session</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label>Sea State:</label>
+                <select id="polar-sea-state-select">
+                    <option value="all">All</option>
+                    <option value="flat">Flat (&lt;0.5m)</option>
+                    <option value="moderate">Moderate (0.5-1.5m)</option>
+                    <option value="rough">Rough (&gt;1.5m)</option>
+                </select>
+            </div>
+            <button id="polar-refresh-btn" class="btn">Refresh</button>
+        </div>
+        <div id="polar-plot" class="polar-chart"></div>
+        <div class="polar-controls">
+            <div class="control-group">
+                <label>View:</label>
+                <select id="polar-view-select">
+                    <option value="polar">Polar Plot</option>
+                    <option value="cartesian">Cartesian (TWA vs BSP)</option>
+                    <option value="density">Data Density</option>
+                </select>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- TRIPS PANEL                                                  -->
+    <!-- ============================================================ -->
+    <section id="panel-trips" class="panel">
+        <div class="trips-controls">
+            <div class="trip-form">
+                <input type="text" id="trip-name" placeholder="Trip name">
+                <input type="text" id="trip-notes" placeholder="Notes (optional)">
+                <button id="trip-start-btn" class="btn btn-primary">Start Trip</button>
+                <button id="trip-end-btn" class="btn btn-warning" disabled>End Trip</button>
+            </div>
+        </div>
+        <div id="trip-active-banner" class="trip-banner" style="display:none">
+            Active trip: <span id="trip-active-name"></span>
+            (<span id="trip-active-samples">0</span> samples)
+        </div>
+        <table id="trips-table" class="data-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Started</th>
+                    <th>Ended</th>
+                    <th>Samples</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="trips-tbody"></tbody>
+        </table>
+        <div id="trip-polar-plot" class="polar-chart" style="display:none"></div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- ADMIN PANEL                                                  -->
+    <!-- ============================================================ -->
+    <section id="panel-admin" class="panel">
+        <div class="admin-grid">
+            <div class="card">
+                <h2>Polar Management</h2>
+                <div class="admin-actions">
+                    <button id="admin-recompute" class="btn">Recompute Polars</button>
+                    <button id="admin-save" class="btn">Save to Disk</button>
+                    <button id="admin-reset" class="btn btn-danger">Reset Master Polar</button>
+                </div>
+                <div id="admin-result" class="admin-result"></div>
+            </div>
+            <div class="card">
+                <h2>Archives</h2>
+                <table id="archives-table" class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Filename</th>
+                            <th>Version</th>
+                            <th>Cells</th>
+                            <th>Sea State</th>
+                        </tr>
+                    </thead>
+                    <tbody id="archives-tbody"></tbody>
+                </table>
+            </div>
+            <div class="card">
+                <h2>System Info</h2>
+                <div class="stats-list" id="admin-info">
+                    <div class="stat-row">
+                        <span>SignalK updates:</span>
+                        <span id="a-updates">0</span>
+                    </div>
+                    <div class="stat-row">
+                        <span>Polar cells (valid):</span>
+                        <span id="a-valid-cells">0</span>
+                    </div>
+                    <div class="stat-row">
+                        <span>Polar version:</span>
+                        <span id="a-polar-version">0</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script src="app.js"></script>
+</body>
+</html>
