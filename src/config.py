@@ -109,7 +109,7 @@ class Config:
     ema_alpha: float = 0.1
 
     # --- Web server ---
-    web_port: int = 3001
+    web_port: int = 8099
     web_static_dir: str = "web"
 
     # --- Data storage ---

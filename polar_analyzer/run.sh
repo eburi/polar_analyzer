@@ -18,7 +18,7 @@ export POLAR_ANALYZER_SIGNALK_URL="${SIGNALK_URL}"
 export POLAR_ANALYZER_TOKEN_FILE="/data/signalk_token.json"
 export POLAR_ANALYZER_DATA_DIR="/data"
 export POLAR_ANALYZER_WEB_STATIC_DIR="/app/web"
-export POLAR_ANALYZER_WEB_PORT="3001"
+export POLAR_ANALYZER_WEB_PORT="8099"
 
 # Build CLI args
 ARGS="live"

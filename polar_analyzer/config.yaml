@@ -10,10 +10,15 @@ arch:
   - amd64
 startup: "application"
 boot: "auto"
+ingress: true
+ingress_port: 8099
+ingress_stream: true
+panel_icon: "mdi:sail-boat"
+panel_title: "Polar Analyzer"
 ports:
-  "3001/tcp": 3001
+  "8099/tcp": null
 ports_description:
-  "3001/tcp": "Web dashboard"
+  "8099/tcp": "Web UI (not required when using Ingress)"
 map:
   - "addon_config:rw"
 options:

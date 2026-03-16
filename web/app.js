@@ -6,6 +6,17 @@
  */
 
 // ---------------------------------------------------------------------------
+// Base path — works both standalone (/) and behind HA ingress (/api/hassio_ingress/<token>/)
+// ---------------------------------------------------------------------------
+
+const BASE = (() => {
+    // Ensure the base path ends with '/' so relative URL concatenation works
+    let path = window.location.pathname;
+    if (!path.endsWith('/')) path += '/';
+    return path;
+})();
+
+// ---------------------------------------------------------------------------
 // State
 // ---------------------------------------------------------------------------
 
@@ -85,7 +96,7 @@ function connectSSE() {
         state.sse.close();
     }
 
-    state.sse = new EventSource('/api/events');
+    state.sse = new EventSource(BASE + 'api/events');
 
     state.sse.onopen = () => {
         state.connected = true;
@@ -187,7 +198,7 @@ function updateMiniPolar(data) {
     if (data.twa_deg == null || data.bsp_kt == null) return;
 
     // Fetch current polar curves and overlay current position
-    fetch('/api/polar/curves')
+    fetch(BASE + 'api/polar/curves')
         .then(r => r.json())
         .then(curves => {
             renderMiniPolar(curves, data);
@@ -296,9 +307,9 @@ function loadPolarPlot() {
 
     let url;
     if (seaState !== 'all') {
-        url = `/api/polar/sea-state/${seaState}`;
+        url = `${BASE}api/polar/sea-state/${seaState}`;
     } else {
-        url = `/api/polar/curves?table=${tableType}`;
+        url = `${BASE}api/polar/curves?table=${tableType}`;
     }
 
     if (viewType === 'density') {
@@ -428,7 +439,7 @@ function renderCartesianPlot(curvesData) {
 }
 
 function loadDensityPlot() {
-    fetch('/api/polar/density')
+    fetch(BASE + 'api/polar/density')
         .then(r => r.json())
         .then(data => renderDensityPlot(data))
         .catch(err => console.error('Failed to load density:', err));
@@ -479,7 +490,7 @@ function initPropulsionButtons() {
 }
 
 function setPropulsionOverride(mode) {
-    fetch('/api/propulsion/override', {
+    fetch(BASE + 'api/propulsion/override', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ mode }),
@@ -513,7 +524,7 @@ function startTrip() {
     const name = document.getElementById('trip-name').value || undefined;
     const notes = document.getElementById('trip-notes').value || '';
 
-    fetch('/api/trips', {
+    fetch(BASE + 'api/trips', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, notes }),
@@ -532,7 +543,7 @@ function startTrip() {
 }
 
 function endTrip() {
-    fetch('/api/trips/end', { method: 'POST' })
+    fetch(BASE + 'api/trips/end', { method: 'POST' })
     .then(r => r.json())
     .then(data => {
         if (data.status === 'ok') {
@@ -547,7 +558,7 @@ function endTrip() {
 }
 
 function loadTrips() {
-    fetch('/api/trips')
+    fetch(BASE + 'api/trips')
     .then(r => r.json())
     .then(data => {
         renderTripsTable(data.trips || []);
@@ -598,7 +609,7 @@ function hideTripBanner() {
 
 // Global functions called from inline handlers
 window.viewTripPolar = function(tripId) {
-    fetch(`/api/trips/${tripId}/polar`)
+    fetch(`${BASE}api/trips/${tripId}/polar`)
     .then(r => r.json())
     .then(data => {
         if (data.error) {
@@ -614,7 +625,7 @@ window.viewTripPolar = function(tripId) {
 
 window.deleteTrip = function(tripId) {
     if (!confirm('Delete this trip and its polar data?')) return;
-    fetch(`/api/trips/${tripId}`, { method: 'DELETE' })
+    fetch(`${BASE}api/trips/${tripId}`, { method: 'DELETE' })
     .then(r => r.json())
     .then(() => loadTrips())
     .catch(err => console.error('Failed to delete trip:', err));
@@ -668,14 +679,14 @@ function renderTripPolar(data) {
 
 function initAdminButtons() {
     document.getElementById('admin-recompute').addEventListener('click', () => {
-        adminAction('/api/polar/recompute', 'Polars recomputed');
+        adminAction(BASE + 'api/polar/recompute', 'Polars recomputed');
     });
     document.getElementById('admin-save').addEventListener('click', () => {
-        adminAction('/api/polar/save', 'Polar saved');
+        adminAction(BASE + 'api/polar/save', 'Polar saved');
     });
     document.getElementById('admin-reset').addEventListener('click', () => {
         if (!confirm('Reset master polar? Current data will be archived.')) return;
-        adminAction('/api/polar/reset', 'Master polar reset and archived');
+        adminAction(BASE + 'api/polar/reset', 'Master polar reset and archived');
     });
 }
 
@@ -704,7 +715,7 @@ function loadAdminData() {
 }
 
 function loadArchives() {
-    fetch('/api/polar/archives')
+    fetch(BASE + 'api/polar/archives')
     .then(r => r.json())
     .then(archives => {
         const tbody = document.getElementById('archives-tbody');
@@ -728,7 +739,7 @@ function loadArchives() {
 // ---------------------------------------------------------------------------
 
 function fetchStatus() {
-    fetch('/api/status')
+    fetch(BASE + 'api/status')
     .then(r => r.json())
     .then(data => {
         state.connected = true;
