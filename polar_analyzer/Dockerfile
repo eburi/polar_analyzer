@@ -1,22 +1,19 @@
-ARG BUILD_FROM=ghcr.io/home-assistant/aarch64-base-python:3.11-alpine3.18
-FROM ${BUILD_FROM}
+ARG BUILD_FROM
+FROM $BUILD_FROM
 
-# Install build dependencies for numpy/scipy
+# Install Python and build tools for native extensions (numpy, scipy)
 RUN apk add --no-cache \
-    gcc \
-    g++ \
-    musl-dev \
-    gfortran \
-    openblas-dev \
-    py3-numpy \
-    py3-scipy
+        python3 \
+        py3-pip \
+        py3-numpy \
+        py3-scipy
 
-# Copy requirements and install Python deps
-COPY requirements.txt /tmp/
-RUN pip3 install --no-cache-dir -r /tmp/requirements.txt \
+# Install Python dependencies that aren't available as apk packages
+COPY requirements.txt /tmp/requirements.txt
+RUN pip3 install --no-cache-dir --break-system-packages -r /tmp/requirements.txt \
     && rm /tmp/requirements.txt
 
-# Copy application code (staged by deploy.sh into build context)
+# Copy application code
 COPY src /app/src
 COPY web /app/web
 
@@ -24,12 +21,11 @@ COPY web /app/web
 ENV PYTHONPATH="/app/src"
 
 # Copy run script
-COPY run.sh /
-RUN chmod a+x /run.sh
+COPY run.sh /app/run.sh
+RUN chmod +x /app/run.sh
 
 # Create data directory
 RUN mkdir -p /data
 
 WORKDIR /app
-
-CMD [ "/run.sh" ]
+CMD ["/app/run.sh"]
