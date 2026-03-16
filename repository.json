@@ -1,0 +1,8 @@
+{
+  "name": "Polar Analyzer",
+  "url": "https://github.com/eburi/polar_analyzer",
+  "maintainer": "Erich Buri <erich@buri.com>",
+  "images": [
+    "ghcr.io/eburi/polar_analyzer:latest"
+  ]
+}
